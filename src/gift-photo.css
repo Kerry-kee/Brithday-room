@@ -1,0 +1,29 @@
+.immersive .gift-art.is-photo {
+  width: min(180px, 100%);
+  height: auto;
+  margin: 22px auto;
+  padding: 7px 7px 16px;
+  box-sizing: border-box;
+  border: 1px solid #d3c4ad;
+  border-radius: 7px;
+  background: #fffdf5;
+  box-shadow: 3px 4px 0 #88765b22;
+}
+.gift-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+.pocket-photo {
+  display: block;
+  width: 32px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 3px;
+}
+.mobile-landscape .gift-art.is-photo {
+  width: 120px;
+  margin: 14px auto;
+  padding: 5px 5px 11px;
+}

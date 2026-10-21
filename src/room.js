@@ -4,6 +4,11 @@ import { gamePoint } from './landscape';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
 import { batchSurfaces } from './minitool-gpu';
+import { createCalendarTextures } from './desk-calendar';
+// Inline photo URLs also work as WebGL textures in the double-click local demo.
+import wallMemoryLeft from './assets/wall-memory-left.jpg?inline';
+import wallMemoryRight from './assets/wall-memory-right.jpg?inline';
+import wallMemoryCenter from './assets/wall-memory-center.jpg?inline';
 
 export function createRoom(container, { onSelect, onReady, onError, onMode, onFocus, onLights, markerElements, reducedMotion }) {
   const scene = new THREE.Scene();
@@ -79,6 +84,27 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   for(const x of [-.85,.85])box(.09,.5,.3,'#ac8c62',x,.25,0,.025,entry);
   box(1.8,.13,.12,'#ae8d64',-3.65,2.5,5.16,.035);
   for(const x of [-4.25,-3.65,-3.05]){cyl(.025,.025,.13,'#9c8058',x,2.43,5.07);ball(.05,'#b39262',x,2.43,5.01);}
+  // Three soft, outlined garments hang above the entry bench.
+  const coats=group(-3.65,2.43,4.94);
+  for(const [i,color] of ['#9eaf92','#d2a38f','#d6bd87'].entries()){
+    const garment=new THREE.Group();garment.position.x=(i-1)*.6;coats.add(garment);
+    line([[0,.01,.035],[.035,.015,.01],[.055,-.04,0],[0,-.10,0],[-.19,-.22,0],[.19,-.22,0],[0,-.10,0]],'#a88a65',.012,garment);
+    const shape=new THREE.Shape();
+    shape.moveTo(-.07,-.18);shape.quadraticCurveTo(0,-.26,.07,-.18);
+    for(const [x,y] of [[.17,-.22],[.28,-.54],[.18,-.59],[.13,-.39],[.18,-.94],[-.18,-.94],[-.13,-.39],[-.18,-.59],[-.28,-.54],[-.17,-.22]])shape.lineTo(x,y);
+    shape.closePath();
+    const fabric=mesh(new THREE.ExtrudeGeometry(shape,{depth:.09,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:2,steps:1}),color,0,0,0,garment);
+    fabric.scale.y=i===1?.84:1;
+    line([[-.07,-.19,-.02],[0,-.29,-.025],[.07,-.19,-.02]],'#f0e1c5',.018,garment);
+    if(i!==1){
+      line([[0,-.3,-.023],[0,-.89,-.023]],'#eadac0',.009,garment);
+      for(const y of [-.4,-.56,-.72])ball(.016,'#8a795e',.035,y,-.03,garment);
+      for(const x of [-.095,.095])box(.11,.11,.02,'#e2cfad',x,-.74,-.025,.018,garment);
+    }else{
+      for(const y of [-.37,-.49,-.61])box(.27,.035,.015,'#efdbc5',0,y,-.025,.006,garment);
+    }
+  }
+  target('coats',coats,[-3.65,2.12,4.89]);
   // Right-wall framed landscape and a shallow ledge.
   box(.12,1.37,1.88,'#b49770',6.01,2.57,-.37,.04);
   box(.035,1.2,1.72,'#f1ecd8',5.93,2.57,-.37,.015);
@@ -122,14 +148,32 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const moonPoolMaterial=new THREE.MeshBasicMaterial({color:'#aacbff',transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
   for(const x of [-2.35,-1.17])for(const z of [-3.75,-2.12]){const pool=mesh(new THREE.PlaneGeometry(1.05,1.46),moonPoolMaterial,x,.159,z);pool.rotation.x=-Math.PI/2;pool.userData.moonPool=true;}
   const daySky=new THREE.Color('#b8d6cc'),nightSky=new THREE.Color('#303e61'),dayDisc=new THREE.Color('#fff0b6'),nightDisc=new THREE.Color('#e1eaff');
-  // Framed art on the left wall.
-  function art(z,y,color) {
-    box(.13,1.04,.82,'#a88761',-6.01,y,z,.04);
-    box(.025,.89,.67,'#fff6de',-5.93,y,z,.01);
-    const a = ball(.2,color,-5.91,y+.05,z); a.scale.set(.045,1,1);
-    box(.025,.06,.4,'#a9ad86',-5.90,y-.26,z,.01);
+  // Framed art that reveals memories after the cake opens.
+  const wallPhotos=[];
+  let wallPhotoProgress=0,wallPhotosReady=0;
+  renderer.domElement.dataset.wallPhotosReady='0';
+  function art(position,y,color,photoUrl,backWall=false,photoAspect=3/4) {
+    const frame=group(backWall?position:-6.01,y,backWall?-5.13:position,backWall?0:Math.PI/2);
+    box(.82,1.04,.13,'#a88761',0,0,0,.04,frame);
+    box(.67,.89,.025,'#fff6de',0,0,.08,.01,frame);
+    const a = ball(.2,color,0,.05,.10,frame); a.scale.set(1,1,.045);
+    box(.4,.06,.025,'#a9ad86',0,-.26,.11,.01,frame);
+    const texture=new THREE.TextureLoader().load(photoUrl,loaded=>{
+      if(disposed){loaded.dispose();return;}
+      wallPhotosReady++;renderer.domElement.dataset.wallPhotosReady=String(wallPhotosReady);
+    },undefined,()=>{renderer.domElement.dataset.wallPhotosError='true';});
+    texture.colorSpace=THREE.SRGBColorSpace;
+    texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    // Write depth so the original illustration's outline cannot draw over the photo.
+    const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,opacity:0,depthWrite:true});
+    material.userData.outlineParameters={visible:false};
+    const photoHeight=Math.min(.65/photoAspect,.65*4/3);
+    const photo=mesh(new THREE.PlaneGeometry(photoHeight*photoAspect,photoHeight),material,0,0,.14,frame);
+    photo.visible=false;wallPhotos.push(photo);
+    return frame;
   }
-  art(-.55,2.92,'#d9aa69'); art(1.03,3.18,'#a8b6a1');
+  art(-.55,2.92,'#d9aa69',wallMemoryRight); art(1.03,3.18,'#a8b6a1',wallMemoryLeft);
+  art(2.75,2.65,'#d9aa69',wallMemoryCenter,true,1080/1610).scale.setScalar(1.15);
   // Plush sage sofa, angled inward.
   const sofa=group(-4.65,.17,-1.25,Math.PI/2);
   for(const x of [-1.22,1.22]) for(const z of [-.45,.45]) cyl(.065,.06,.27,'#8e7152',x,.12,z,sofa);
@@ -218,7 +262,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const windowPlant=plant(-2.64,1.8,-4.85,.67);target('plant',windowPlant,[-2.64,2.65,-4.64]);
   plant(5.1,.17,2.4,1.4);
   // Side table and record player.
-  const music=group(-1.85,.17,.65);
+  const music=group(-5.5,.17,1.8,Math.PI/2);
   for(const x of [-.42,.42]) for(const z of [-.3,.3]) box(.075,.65,.075,'#9a7754',x,.32,z,.02,music);
   box(1.19,.12,.97,'#c8a375',0,.67,0,.045,music);
   box(.96,.2,.73,'#b27e5b',0,.84,0,.055,music);
@@ -227,14 +271,14 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   box(.095,.003,.027,'#ecd8ad',.145,.017,0,.002,record);
   record.visible=false;recordLabel.visible=false;
   line([[.34,.975,-.23],[.35,.985,.17],[.15,.985,.25]],'#d8c9a7',.022,music);
-  target('music',music,[-1.84,1.5,.68]);
+  target('music',music,[-5.33,1.5,1.8]);
   // Floor lamp casts a warm pool beside the couch.
   cyl(.28,.31,.065,'#bda57e',-5.03,.21,-2.98);
   cyl(.028,.028,2.2,'#a68b61',-5.03,1.3,-2.98);
   cyl(.3,.49,.55,'#f5ddb0',-5.03,2.57,-2.98);
   const lamp=new THREE.PointLight('#ffcd85',2,3);lamp.position.set(-5.03,2.33,-2.98);scene.add(lamp);
   // Sleeping cat on a little cushion.
-  const cat=group(-3.1,.24,1.15,.28);
+  const cat=group(-5.45,.24,3.25,Math.PI/2);
   const cushion=cyl(.59,.59,.13,'#c4a48b',0,0,0,cat);cushion.scale.z=.76;
   const body=ball(.36,'#d6a56f',0,.23,0,cat);body.scale.set(1.23,.74,.85);
   const head=ball(.235,'#e5bb86',.29,.38,.13,cat);head.scale.set(1,.91,.85);
@@ -242,7 +286,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   for(const x of [.2,.37]) line([[x-.035,.397,.312],[x,.383,.321],[x+.028,.394,.315]],'#735d46',.009,cat);
   ball(.023,'#b77565',.29,.348,.334,cat);
   line([[-.31,.26,.05],[-.39,.28,.26],[-.21,.28,.32],[.02,.27,.26]],'#bd8959',.066,cat);
-  target('cat',cat,[-3.1,1.1,1.15]);
+  target('cat',cat,[-5.45,1.1,3.25]);
   // A few birthday parcels and softly bobbing balloons.
   function parcel(x,z,size,color) {const g=group(x,.17,z);box(size,size*.8,size,color,0,size*.4,0,.06,g);box(size*1.06,.12,size*1.06,color,0,size*.84,0,.025,g);box(.1,size*.84,size*1.02,'#f3e2bc',0,size*.43,0,.006,g);box(size*1.02,.015,.1,'#f3e2bc',0,size*.91,0,.004,g);for(const k of [-1,1]) { const bow=mesh(new THREE.TorusGeometry(.12,.025,8,20),'#f3e2bc',k*.1,size*.99,0,g);bow.rotation.y=.5;bow.rotation.z=k*.4; }return g; }
   parcel(4.74,3.8,.57,'#bbbd98');parcel(5.3,4.1,.42,'#d7a186');
@@ -259,20 +303,31 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   for(const x of [-.93,.93])for(const z of [-.36,.36])box(.09,.93,.09,'#a98b63',x,.48,z,.02,desk);
   box(.64,.045,.43,'#c7977f',-.7,1.09,.1,.015,desk);
   box(.56,.07,.37,'#a9b397',-.68,1.145,.1,.015,desk);
-  const deskChair=group(3.35,.17,-1,-Math.PI/2);
+  const deskChair=group(3.35,.17,-1,Math.PI/2);
   box(.78,.13,.73,'#a1b28e',0,.55,0,.07,deskChair);box(.79,.8,.12,'#a8b996',0,1.01,-.32,.07,deskChair);
   for(const x of [-.3,.3])for(const z of [-.26,.26])cyl(.035,.045,.53,'#ac8e66',x,.28,z,deskChair);
   const readingRug=cyl(1.5,1.5,.027,'#bcc5a2',4.1,.178,-1);readingRug.scale.z=1.2;
-  const postcard=group(4.36,1.24,-.95);
-  box(.06,.55,.89,'#f5e9ca',0,0,0,.025,postcard);
-  for(const [i,color] of ['#93ab88','#d8b16b','#d7a294'].entries())box(.016,.4,.24,color,-.04,0,-.27+i*.27,.008,postcard);
-  target('postcard',postcard,[4.28,1.61,-.95]);
-  // Readable analog clock: 04:20, with a slow hour hand at 4 + 20/60.
+  // Back-left of the desk, facing the chair. Retain the clue ID for saved progress.
+  const calendar=group(4.85,1.24,-1.65,-Math.PI/2);
+  const calendarTextures=createCalendarTextures();
+  box(.92,.035,.48,'#b5bd9b',0,0,-.025,.015,calendar);
+  const calendarBack=box(.85,.68,.035,'#a6b18e',0,.36,-.13,.015,calendar);calendarBack.rotation.x=.32;
+  const calendarFront=box(.85,.68,.035,'#fff8e5',0,.36,.08,.015,calendar);calendarFront.rotation.x=-.22;
+  const calendarPaper=new THREE.MeshToonMaterial({map:calendarTextures.page,gradientMap:shadeRamp});
+  calendarPaper.userData.outlineParameters={visible:false};
+  mesh(new THREE.PlaneGeometry(.82,.65),calendarPaper,0,0,.019,calendarFront);
+  for(const x of [-.27,0,.27])mesh(new THREE.TorusGeometry(.025,.008,6,16),'#9b8769',x,.7,.005,calendar).rotation.y=Math.PI/2;
+  box(.85,.014,.34,'#fff7df',0,.018,.36,.008,calendar);
+  const notePaper=new THREE.MeshToonMaterial({map:calendarTextures.note,gradientMap:shadeRamp});
+  notePaper.userData.outlineParameters={visible:false};
+  mesh(new THREE.PlaneGeometry(.83,.332),notePaper,0,.026,.36,calendar).rotation.x=-Math.PI/2;
+  target('postcard',calendar,[4.72,1.94,-1.65]);
+  // Readable analog clock: 10:22, including the hour hand advance between 10 and 11.
   const wallClock=group(5.96,2.72,-3.05,-Math.PI/2);
   const clockBody=cyl(.44,.44,.08,'#ac9165',0,0,0,wallClock);clockBody.rotation.x=Math.PI/2;
   const clockFace=cyl(.385,.385,.015,'#f6efd9',0,0,.05,wallClock);clockFace.rotation.x=Math.PI/2;
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const tick=box(.018,.045,.015,'#9c946f',Math.sin(a)*.32,Math.cos(a)*.32,.07,.002,wallClock);tick.rotation.z=-a;}
-  for(const [angle,length,width] of [[(4+20/60)/12*Math.PI*2,.2,.032],[20/60*Math.PI*2,.28,.023]]){const hand=box(width,length,.021,'#6f7b5c',Math.sin(angle)*length/2,Math.cos(angle)*length/2,.084,.004,wallClock);hand.rotation.z=-angle;}
+  for(const [angle,length,width] of [[(10+22/60)/12*Math.PI*2,.2,.032],[22/60*Math.PI*2,.28,.023]]){const hand=box(width,length,.021,'#6f7b5c',Math.sin(angle)*length/2,Math.cos(angle)*length/2,.084,.004,wallClock);hand.rotation.z=-angle;}
   ball(.035,'#b49b66',0,0,.094,wallClock);target('clock',wallClock,[5.84,2.72,-3.05]);
   const potting=group(3.35,.17,4.65);
   for(const x of [-.73,.73])for(const z of [-.3,.3])box(.09,.97,.09,'#ad8b62',x,.48,z,.025,potting);
@@ -293,6 +348,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:'#fff3c5',size:.025,transparent:true,opacity:.65}));root.add(dust);
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2(),reach=3.15;
   let disposed=false,frame,paused=false,focus='',lastPose=0,recordPlaying=false;
+  document.fonts.ready.then(()=>{if(!disposed)calendarTextures.redraw();});
   let quality=0,slowTime=0,sampleTime=0,sampleFrames=0,contextLost=false,hiddenAt=0;
   if(offline){
     root.traverse(o=>{if(o.isMesh)o.layers.enable(1);});raycaster.layers.set(1);
@@ -344,6 +400,14 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
       if(progress===1){const done=reveal.resolve;reveal=null;cake.scale.setScalar(1);setCakeOpened(true);renderer.domElement.dataset.revealing='false';done(true);}
     }
     lightBlend+=(Number(lightsOn)-lightBlend)*(reducedMotion?1:1-Math.exp(-dt*2.8));
+    if(!cakeOpened)wallPhotoProgress=0;
+    else if(wallPhotosReady===wallPhotos.length)wallPhotoProgress=reducedMotion?1:Math.min(1,wallPhotoProgress+dt/4.5);
+    for(const photo of wallPhotos){
+      photo.visible=wallPhotosReady===wallPhotos.length&&wallPhotoProgress>0;
+      photo.material.opacity=smooth(wallPhotoProgress);
+      photo.material.color.setScalar(.6+.4*lightBlend);
+    }
+    renderer.domElement.dataset.wallPhotoProgress=wallPhotoProgress.toFixed(3);
     hemi.intensity=1.6*lightBlend;sun.intensity=1.1*lightBlend;fill.intensity=.35*lightBlend;innerLight.intensity=2*lightBlend;lamp.intensity=2*lightBlend;
     const nightBlend=1-lightBlend;moonFill.intensity=.28*nightBlend;moonLight.intensity=.48*nightBlend;moonPoolMaterial.opacity=.12*nightBlend;
     skyMaterial.color.copy(daySky).lerp(nightSky,nightBlend);moonMaterial.color.copy(dayDisc).lerp(nightDisc,nightBlend);moonCutMaterial.color.copy(skyMaterial.color);moonCutMaterial.opacity=starMaterial.opacity=nightBlend;
@@ -384,7 +448,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
     setPuzzleState(state){puzzleVisual=state;can.visible=!state.items.includes('wateringCan');record.visible=recordLabel.visible=state.items.includes('record');sofaLock.visible=!state.solved.includes('sofa');windowPlant.scale.y=state.solved.includes('plant')?.77:.59;},
     setRecordPlaying(value){recordPlaying=value;renderer.domElement.dataset.recordPlaying=String(value);},
     toggleLights:()=>setLights(!lightsOn),
-    restoreCake(value,blown){if(!reveal){setCakeOpened(value);candleBlown=blown;}},
+    restoreCake(value,blown){if(!reveal){const changed=cakeOpened!==value;setCakeOpened(value);candleBlown=blown;if(changed)wallPhotoProgress=value?1:0;}},
     revealCake(){if(reveal)return reveal.promise;setLights(false);candleBlown=false;if(cakeOpened)return Promise.resolve(true);let resolve;const promise=new Promise(done=>resolve=done);reveal={start:performance.now(),duration:reducedMotion?150:3600,resolve,promise};renderer.domElement.dataset.revealing='true';return promise;},
     celebrate:()=>{candleBlown=true;setLights(true);},
     reset:()=>{if(reveal){reveal.resolve(false);reveal=null;}renderer.domElement.dataset.revealing='false';setCakeOpened(false);candleBlown=false;cake.scale.setScalar(1);cakeLid.position.y=.94;cakeLid.rotation.set(0,0,0);coverPanels.forEach(({hinge})=>hinge.rotation.set(0,0,0));coverPaper.opacity=coverRibbon.opacity=1;setLights(true);recordPlaying=false;record.rotation.y=0;recordLabel.rotation.y=0;controls.reset();},

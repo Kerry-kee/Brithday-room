@@ -1,0 +1,8 @@
+.desk-calendar{max-width:310px;margin:20px auto 24px;padding:14px 18px;background:#fff8e5;border:2px solid #a3ae8d;border-top:9px solid #a3ae8d;border-radius:8px;box-shadow:3px 4px 0 #b5a48233;color:#637253}
+.desk-calendar header{font-size:32px;border-bottom:1px solid #d2c6aa;padding-bottom:10px}
+.desk-calendar header small{font-size:13px;letter-spacing:2px;margin-left:10px}
+.calendar-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px 2px;padding:12px 0;font-size:22px}
+.calendar-days span{display:grid;place-items:center;min-height:30px}
+.calendar-days .important-day{color:#a75e4b;border:2px solid #b46e58;border-radius:50%;background:#f0d2bf;transform:rotate(-6deg)}
+.desk-calendar p{margin:4px 0;font-size:23px;color:#a75e4b}
+.puzzle-dialog .desk-calendar~.postcard-colors span{font-size:18px}
