@@ -263,14 +263,6 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   box(.78,.13,.73,'#a1b28e',0,.55,0,.07,deskChair);box(.79,.8,.12,'#a8b996',0,1.01,-.32,.07,deskChair);
   for(const x of [-.3,.3])for(const z of [-.26,.26])cyl(.035,.045,.53,'#ac8e66',x,.28,z,deskChair);
   const readingRug=cyl(1.5,1.5,.027,'#bcc5a2',4.1,.178,-1);readingRug.scale.z=1.2;
-  function textTile(textValue,w,h,x,y,z,rotation=0){
-    const canvas=document.createElement('canvas');canvas.width=768;canvas.height=256;const ctx=canvas.getContext('2d');
-    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-    const draw=()=>{if(disposed)return;ctx.fillStyle='#f7f0db';ctx.fillRect(0,0,768,256);ctx.fillStyle='#737d5d';ctx.font='62px "Birthday Hand", KaiTi, cursive';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(textValue,384,128,720);texture.needsUpdate=true;};
-    if(document.fonts&&document.fonts.load)document.fonts.load('62px "Birthday Hand"',textValue).then(draw).catch(draw);else Promise.resolve().then(draw);
-    const tile=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:texture,roughness:1,side:THREE.DoubleSide}),x,y,z);tile.rotation.y=rotation;return tile;
-  }
-  textTile('阅读角 · 把一天排成一列',2.3,.7,5.98,3.62,-1,-Math.PI/2);
   const postcard=group(4.36,1.24,-.95);
   box(.06,.55,.89,'#f5e9ca',0,0,0,.025,postcard);
   for(const [i,color] of ['#93ab88','#d8b16b','#d7a294'].entries())box(.016,.4,.24,color,-.04,0,-.27+i*.27,.008,postcard);
@@ -291,7 +283,6 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const canHandle=mesh(new THREE.TorusGeometry(.18,.029,8,26),'#899e7c',-.2,.27,0,can);canHandle.rotation.y=Math.PI/2;
   line([[.1,.22,0],[.3,.26,0],[.44,.43,0]],'#9bb18e',.047,can);cyl(.09,.035,.07,'#91a581',.45,.44,0,can).rotation.z=-.7;
   target('wateringCan',can,[2.94,1.96,4.53]);
-  textTile('绿植角 · 请给窗边的朋友一点水',2.7,.7,3.1,2.57,5.21,Math.PI);
   // Small physical changes acknowledge each solved puzzle in the room.
   const sofaLock=ball(.06,'#b69759',-.78,1.24,.06,sofa);sofaLock.userData.target='sofa';
   let puzzleVisual={solved:[],items:[]};
