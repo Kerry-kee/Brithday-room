@@ -1,13 +1,12 @@
 export const PUZZLE_STORAGE = 'birthday-little-room-v2';
 export const extraObjects = [
-  {id:'postcard',place:'阅读桌左上角的台历'},
+  {id:'postcard',place:'阅读桌上的明信片'},
   {id:'clock',place:'停住的挂钟'},
   {id:'wateringCan',place:'绿植角的水壶'},
-  {id:'coats',place:'挂钩上的衣服'},
 ];
 export const clueTexts = {
-  postcard: {title:'把一天排成一列',text:'台历把 10 月 22 日圈成了一个重要的日子。台历下方的纸条依次画着：清晨的绿叶、午后的金色阳光、傍晚的粉色云霞。书架上的三本书，也想按这个顺序站好。'},
-  clock: {title:'留住的时刻',text:'挂钟停在 10 点 22 分。钟框后的小字写着：先记下两位小时，再写下两位分钟。这是我们约好见面的时间。'},
+  postcard: {title:'把一天排成一列',text:'明信片上依次画着：清晨的绿叶、午后的金色阳光、傍晚的粉色云霞。背面写着：书架上的三本书，也想按这个顺序站好。'},
+  clock: {title:'留住的下午',text:'挂钟停在 4 点 20 分。钟框后的小字写着：先记下时针，再写下两位分钟。这是我们约好见面的时间。'},
   record: {title:'唱片背面的刻字',text:'从书架暗格里拿到了一张小唱片。封套背面刻着：SOL → MI → DO。把唱片带到唱片机，再按这个顺序弹三个音。'},
   key: {title:'叶子下的小钥匙',text:'浇水后，叶子舒展开来，露出一把黄铜钥匙。钥匙牌上缝着一小片沙发布料。'},
 };
@@ -29,7 +28,7 @@ export function attemptPuzzle(state,id,input){
     add('solved',id);add('items','record');add('clues','record');return done('三本书对齐了！暗格里有一份礼物，还有一张写着音符的唱片。');
   }
   if(id==='drawer'){
-    if(input!=='1022')return fail('锁扣没有弹开。密码是两位小时数字，加上两位分钟。');
+    if(input!=='420')return fail('锁扣没有弹开。密码是一个小时数字，加上两位分钟。');
     add('solved',id);return done('咔哒。锁扣弹开，抽屉里藏着一份礼物。');
   }
   if(id==='plant'){
@@ -48,15 +47,15 @@ export function attemptPuzzle(state,id,input){
   return fail('这里暂时没有可以操作的机关。');
 }
 export function nextPuzzleHint(state,found){
-  if(!state.clues.includes('postcard')&&!state.solved.includes('books'))return '去右侧的阅读桌，看看桌面左上角的台历和下方的线索。';
-  if(!state.solved.includes('books'))return '按台历下方清晨、午后、傍晚的颜色顺序，按下书架的三本书。';
+  if(!state.clues.includes('postcard')&&!state.solved.includes('books'))return '去右侧的阅读桌，看看桌上那张彩色明信片。';
+  if(!state.solved.includes('books'))return '按明信片上清晨、午后、傍晚的颜色顺序，按下书架的三本书。';
   if(!found.includes('books'))return '书架暗格已经打开，回去收下那份礼物吧。';
   if(!state.items.includes('wateringCan'))return '入口右侧的绿植角，木架上放着一只绿色水壶。';
   if(!state.solved.includes('plant'))return '带水壶去后窗边，给垂着叶子的植物浇一点水。';
   if(!state.solved.includes('sofa'))return '植物给了你一把钥匙。把它带到左侧沙发的抱枕旁。';
   if(!state.clues.includes('clock')&&!state.solved.includes('drawer'))return '阅读桌旁的挂钟停住了，走近读一读钟框上的字。';
-  if(!state.solved.includes('drawer'))return '后窗右侧有一个密码抽屉。两位小时数字，后面跟着两位分钟，共四位。';
-  if(!state.solved.includes('music'))return '去沙发左侧靠墙的唱片机，按唱片封套的刻字弹奏。音符也记在了手记里。';
+  if(!state.solved.includes('drawer'))return '后窗右侧有一个密码抽屉。时针的数字，后面跟着两位分钟。';
+  if(!state.solved.includes('music'))return '去左侧唱片机，按唱片封套的刻字弹奏。音符也记在了手记里。';
   if(found.length<5)return '机关都解开了，打开口袋查看还有哪份礼物没有收下。';
   return '心意都收齐了，走到中间的蛋糕旁许个愿吧。';
 }

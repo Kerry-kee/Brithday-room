@@ -29,12 +29,12 @@ try{
  const grid=flat.locator('.flat-room-grid');const close=()=>flat.getByRole('button',{name:'关闭',exact:true}).click();
  const collect=async()=>{await flat.getByRole('button',{name:'看看里面的礼物'}).click();await flat.getByRole('button',{name:'拆开礼物'}).click();await flat.getByRole('button',{name:'收好这份心意'}).click();};
  await grid.getByRole('button',{name:'生日惊喜礼盒',exact:true}).click();assert.equal(await flat.locator('dialog').count(),0);
- await grid.getByRole('button',{name:'阅读桌左上角的台历'}).click();await close();assert.equal(await flat.locator('.mt-dialog-backdrop').count(),0);
+ await grid.getByRole('button',{name:'阅读桌上的明信片'}).click();await close();assert.equal(await flat.locator('.mt-dialog-backdrop').count(),0);
  const {gifts}=await import('../src/content.js');const explore=id=>grid.getByRole('button',{name:gifts.find(g=>g.id===id).place,exact:true}).click();
  await explore('books');for(const name of ['叶子绿','日光金','晚霞粉'])await flat.getByRole('button',{name:`按下${name}书脊`}).click();await collect();
  await grid.getByRole('button',{name:'绿植角的水壶'}).click();await flat.getByRole('button',{name:'拿起水壶'}).click();
  await explore('plant');await flat.getByRole('button',{name:'轻轻浇一点水'}).click();await collect();await explore('sofa');await flat.getByRole('button',{name:'用钥匙打开'}).click();await collect();
- await explore('drawer');await flat.getByLabel('四位密码').fill('1022');await flat.getByRole('button',{name:'试着打开'}).click();await collect();
+ await explore('drawer');await flat.getByLabel('三位密码').fill('420');await flat.getByRole('button',{name:'试着打开'}).click();await collect();
  await explore('music');for(const note of ['SOL','MI','DO'])await flat.getByRole('button',{name:new RegExp('^'+note)}).click();await collect();
  await grid.getByRole('button',{name:'生日惊喜礼盒',exact:true}).click();await flat.getByRole('dialog',{name:'许一个生日愿望'}).waitFor();assert.equal(await flat.locator('main').getAttribute('data-music-playing'),'true');await flat.getByRole('button',{name:'许好啦，吹灭蜡烛'}).click();await flat.getByRole('button',{name:'再在小屋待一会儿'}).click();assert.equal(await flat.locator('.mt-dialog-backdrop').count(),0);assert.equal(await flat.evaluate(()=>document.body.scrollWidth>innerWidth),false);await flat.screenshot({path:'test-results/minitool-fallback.png'});
  await flat.setViewportSize({width:390,height:844});await flat.waitForFunction(()=>document.querySelector('.landscape-rotated'));await grid.getByRole('button',{name:'生日蛋糕',exact:true}).click();await flat.getByRole('dialog',{name:'生日快乐',exact:true}).waitFor();await flat.getByRole('button',{name:'再在小屋待一会儿'}).click();await flat.setViewportSize({width:844,height:390});await flat.waitForFunction(()=>!document.querySelector('.landscape-rotated'));await flat.close();

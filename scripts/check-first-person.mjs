@@ -43,21 +43,19 @@ try{
  async function openGift(id){await page.locator(`[data-gift="${id}"]`).click();await page.getByRole('button',{name:'拆开礼物'}).click();await page.getByRole('button',{name:'收好这份心意'}).click();await page.waitForTimeout(150);}
  async function collect(){await page.getByRole('button',{name:'看看里面的礼物'}).click();await page.getByRole('button',{name:'拆开礼物'}).click();await page.getByRole('button',{name:'收好这份心意'}).click();await page.waitForTimeout(150);}
  await walk(2.8,3.5);await aim(2.94,1.96,4.53);await page.locator('[data-object="wateringCan"]').click();await page.getByRole('button',{name:'拿起水壶'}).click();
- await walk(2.8,.3);await aim(4.72,1.6,-1.65);await page.screenshot({path:'test-results/desk-calendar-scene.png'});await page.locator('[data-object="postcard"]').click();await page.getByText('把一天排成一列',{exact:true}).waitFor();await page.getByLabel('10月22日，重要的日子',{exact:true}).waitFor();await page.waitForTimeout(350);await page.screenshot({path:'test-results/desk-calendar-clue.png'});await page.keyboard.press('Escape');
- await walk(2.4,-2.95);await walk(4.6,-3.3);await aim(5.84,2.72,-3.05);await page.screenshot({path:'test-results/clock-1022.png'});await page.locator('[data-object="clock"]').click();await page.getByText('10 : 22',{exact:true}).waitFor();await page.keyboard.press('Escape');
+ await walk(2.8,.3);await aim(4.28,1.61,-.95);await page.locator('[data-object="postcard"]').click();await page.getByText('把一天排成一列',{exact:true}).waitFor();await page.keyboard.press('Escape');
+ await walk(2.4,-2.95);await walk(4.6,-3.3);await aim(5.84,2.72,-3.05);await page.locator('[data-object="clock"]').click();await page.getByText('4 : 20',{exact:true}).waitFor();await page.keyboard.press('Escape');
  await aim(4.6,1.88,-4.24);await page.locator('[data-gift="books"]').click();
  for(const label of ['晚霞粉','叶子绿','日光金'])await page.getByRole('button',{name:`按下${label}书脊`}).click();
  await page.getByText('书架轻轻响了一声，但暗格没有打开。再想想一天中颜色出现的先后。',{exact:true}).waitFor();
  for(const label of ['叶子绿','日光金','晚霞粉'])await page.getByRole('button',{name:`按下${label}书脊`}).click();
  await page.screenshot({path:'test-results/puzzle-books.png'});await collect();console.log('Book puzzle and clue collection passed.');
  await walk(1.1,-3.2);await aim(1.1,1.24,-3.92);await page.locator('[data-gift="drawer"]').click();
- await page.getByLabel('四位密码').fill('102');assert.equal(await page.getByLabel('四位密码').evaluate(el=>el.checkValidity()),false);await page.getByLabel('四位密码').fill('0000');await page.getByRole('button',{name:'试着打开'}).click();await page.getByText('锁扣没有弹开。密码是两位小时数字，加上两位分钟。',{exact:true}).waitFor();
- await page.getByLabel('四位密码').fill('1022');await page.screenshot({path:'test-results/drawer-1022.png'});await page.getByRole('button',{name:'试着打开'}).click();await collect();
+ await page.getByLabel('三位密码').fill('000');await page.getByRole('button',{name:'试着打开'}).click();await page.getByText('锁扣没有弹开。密码是一个小时数字，加上两位分钟。',{exact:true}).waitFor();
+ await page.getByLabel('三位密码').fill('420');await page.getByRole('button',{name:'试着打开'}).click();await collect();
  await walk(-2.5,-3.8);await aim(-2.64,2.65,-4.64);await page.locator('[data-gift="plant"]').click();await page.getByRole('button',{name:'轻轻浇一点水'}).click();await collect();
  await walk(-2.9,-1);await aim(-4.35,1.48,-.42);await page.locator('[data-gift="sofa"]').click();await page.getByRole('button',{name:'用钥匙打开'}).click();await collect();
- await walk(-2.9,2.5);await walk(-3.6,2.6);await aim(-5.12,.62,2.96);await canvas.focus();await page.keyboard.press('e');
- await page.getByText('小猫翻了个身：喵，生日快乐。今天也要好好休息。',{exact:true}).waitFor();
- await aim(-5.33,1.5,1.8);await page.screenshot({path:'test-results/sofa-cat-record-player.png'});await page.locator('[data-gift="music"]').click();
+ await walk(-1.9,-1.2);await walk(1.7,-1.2);await walk(1.7,2.5);await walk(-2.9,2.5);await aim(-1.84,1.5,.68);await page.locator('[data-gift="music"]').click();
  for(const note of ['DO','MI','SOL'])await page.getByRole('button',{name:new RegExp(note)}).click();
  await page.getByText('旋律还差一点。翻翻手记，看看唱片封套背面的刻字。',{exact:true}).waitFor();
  for(const note of ['SOL','MI','DO'])await page.getByRole('button',{name:new RegExp(note)}).click();await collect();
