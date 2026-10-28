@@ -20,6 +20,8 @@ npm.cmd run preview
 
 ## GitHub Pages 发布
 
+仓库：`Kerry-kee/Brithday-room`。网站地址：https://kerry-kee.github.io/Brithday-room/ 。
+
 自动发布配置位于 `.github/workflows/deploy.yml`。首次发布需在目标仓库的 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。
 
 将项目源文件、`public/`、锁文件和工作流推送至 `main` 或 `master` 后，Actions 会安装依赖、检查谜题逻辑、构建并发布 `dist/`。无需上传 `node_modules/`、`dist/` 或本地测试截图。发布地址以 Actions 的 `github-pages` 环境输出为准，通常为 `https://<账号>.github.io/<仓库名>/`。
