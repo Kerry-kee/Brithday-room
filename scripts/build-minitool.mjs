@@ -3,8 +3,11 @@ import postcss from 'postcss';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const root=process.cwd(),out=path.join(root,'artifacts/minitool');
-if(path.relative(root,out)!==path.join('artifacts','minitool'))throw Error('Unexpected output path');
+const args=process.argv.slice(2);
+function argument(name,fallback){const index=args.indexOf(name);if(index<0)return fallback;const value=args[index+1];if(!value||value.startsWith('--'))throw Error(`Missing value for ${name}`);return value;}
+const root=process.cwd(),artifactsRoot=path.resolve(root,'artifacts'),out=path.resolve(root,argument('--out','artifacts/minitool'));
+const outputRelative=path.relative(artifactsRoot,out);
+if(!outputRelative||outputRelative==='..'||outputRelative.startsWith(`..${path.sep}`)||path.isAbsolute(outputRelative))throw Error('Output must be a subdirectory of artifacts');
 await build({configFile:false,mode:'minitool',base:'./',publicDir:false,plugins:[{
   name:'offline-renderer',
   transform(code,id){if(id.replaceAll('\\','/').includes('/react-dom/cjs/'))return {code:code.replace(/navigator\.connection/g,'undefined'),map:null};},

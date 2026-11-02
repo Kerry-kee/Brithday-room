@@ -4,7 +4,11 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
-const root=resolve('artifacts/minitool'),errors=[],requests=[],metrics=[];
+const args=process.argv.slice(2);
+function argument(name,fallback){const index=args.indexOf(name);if(index<0)return fallback;const value=args[index+1];if(!value||value.startsWith('--'))throw Error(`Missing value for ${name}`);return value;}
+const artifactsRoot=resolve('artifacts'),root=resolve(argument('--root','artifacts/minitool'));
+if(!root.startsWith(artifactsRoot+sep))throw Error('Test root must be a subdirectory of artifacts');
+const errors=[],requests=[],metrics=[];
 const server=createServer(async(req,res)=>{if(req.url==='/favicon.ico'){res.writeHead(204).end();return;}const file=resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname)+(req.url==='/'?'index.html':''));if(!file.startsWith(root+sep)){res.writeHead(403).end();return;}try{const data=await readFile(file);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css','.woff2':'font/woff2'})[extname(file)]||'application/octet-stream','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; worker-src 'none'; object-src 'none'; frame-src 'none'"}).end(data);}catch{res.writeHead(404).end();}});
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const origin=`http://127.0.0.1:${server.address().port}`;

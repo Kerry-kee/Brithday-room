@@ -11,12 +11,35 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-打开终端显示的本地地址，通常是 http://127.0.0.1:5173 。本项目需要通过本地服务器打开，不能直接双击 index.html。
+打开终端显示的本地地址，通常是 http://127.0.0.1:5173 。源代码根目录中的 `index.html` 需要通过开发服务器打开；需要直接双击时，请使用下方生成的“本地 HTML 版”。
 
 ```powershell
 npm.cmd run build
 npm.cmd run preview
 ```
+
+## 本地 HTML 版
+
+只生成可直接双击运行的版本时，Node.js 和 npm 就足够：
+
+```powershell
+npm.cmd run build:local
+```
+
+还可以继续执行真实的 `file://` 浏览器测试：
+
+```powershell
+npm.cmd run check:local
+```
+
+如需同时生成分享 ZIP，请先安装 Python 3，再执行 `npm.cmd run package:local`；或者用 `npm.cmd run local` 一次完成构建、测试和打包。
+
+生成结果：
+
+- `artifacts/local-html/index.html`：在 Edge 或 Chrome 中直接双击打开。
+- `artifacts/Brithday-room-local-html.zip`：用于微信、QQ、U盘等文件分享。
+
+分享时应发送完整 ZIP。接收者需要先完整解压，再双击文件夹中的 `index.html`；不能只单独发送 `index.html`，因为它还需要同目录下的 `assets/` 和 `fonts/`。离线版本使用经典脚本与相对资源路径，不需要启动服务器，也不会请求外部网络。
 
 ## GitHub Pages 发布
 
