@@ -9,12 +9,12 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const scene = new THREE.Scene();
   const offline=import.meta.env.MODE==='minitool';
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, offline?1.5:2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;
-  const inkEffect=offline?null:new OutlineEffect(renderer,{defaultThickness:.0033,defaultColor:[.04,.05,.03],defaultAlpha:1});
+  const inkEffect=new OutlineEffect(renderer,{defaultThickness:.0033,defaultColor:[.04,.05,.03],defaultAlpha:1});
   const shadeRamp=new THREE.DataTexture(new Uint8Array([185,230,255]),3,1,THREE.RedFormat);
   shadeRamp.minFilter=shadeRamp.magFilter=THREE.NearestFilter;shadeRamp.needsUpdate=true;
   container.prepend(renderer.domElement);
@@ -335,7 +335,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
   const controls=createFirstPerson(camera,renderer.domElement,{onInteract:interact,onMode});
   const lost=e=>{e.preventDefault();contextLost=true;cancelAnimationFrame(frame);onError('3D 画面暂时中断了。已找到的礼物会保留，可继续轻量探索。');};renderer.domElement.addEventListener('webglcontextlost',lost);
   const restored=()=>{contextLost=false;onError('图形环境已恢复，可以重新加载，或继续轻量探索。');};renderer.domElement.addEventListener('webglcontextrestored',restored);
-  function resize(){const w=container.clientWidth,h=container.clientHeight;if(offline)renderer.setPixelRatio(Math.min(devicePixelRatio,quality?1:1.5,Math.sqrt((quality?1000000:2000000)/Math.max(w*h,1))));renderer.setSize(w,h);camera.aspect=w/Math.max(h,1);camera.fov=w<600?78:70;camera.updateProjectionMatrix();}
+  function resize(){const w=container.clientWidth,h=container.clientHeight;if(offline)renderer.setPixelRatio(quality?Math.min(devicePixelRatio,1,Math.sqrt(1000000/Math.max(w*h,1))):Math.min(devicePixelRatio,2));renderer.setSize(w,h);camera.aspect=w/Math.max(h,1);camera.fov=w<600?78:70;camera.updateProjectionMatrix();}
   const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):{observe(){window.addEventListener('resize',resize);},disconnect(){window.removeEventListener('resize',resize);}};observer.observe(container);resize();
   const start=performance.now();let previous=start;
   const visibility=()=>{if(document.hidden){hiddenAt=performance.now();cancelAnimationFrame(frame);}else if(!disposed&&!contextLost){previous=performance.now();if(reveal&&hiddenAt)reveal.start+=previous-hiddenAt;hiddenAt=0;sampleTime=sampleFrames=slowTime=0;frame=requestAnimationFrame(render);}};document.addEventListener('visibilitychange',visibility);
@@ -380,7 +380,7 @@ export function createRoom(container, { onSelect, onReady, onError, onMode, onFo
     if(focus!==id){focus=id;onFocus(id);}
     if(import.meta.env.DEV && now-lastPose>100){renderer.domElement.dataset.pose=JSON.stringify(controls.getState());lastPose=now;}
     if(inkEffect)inkEffect.render(scene,camera);else renderer.render(scene,camera);
-    if(offline&&now-lastPose>500){renderer.domElement.dataset.gpu=JSON.stringify({quality,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixels:renderer.domElement.width*renderer.domElement.height,textures:renderer.info.memory.textures});lastPose=now;}
+    if(offline&&now-lastPose>500){renderer.domElement.dataset.gpu=JSON.stringify({quality,outline:true,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,pixels:renderer.domElement.width*renderer.domElement.height,textures:renderer.info.memory.textures});lastPose=now;}
   }
   if(offline){renderer.debug.onShaderError=()=>{contextLost=true;cancelAnimationFrame(frame);onError('画面暂时无法显示，正在切换轻量探索。');};renderer.compile(scene,camera);}frame=requestAnimationFrame(render);onReady();
   return {
